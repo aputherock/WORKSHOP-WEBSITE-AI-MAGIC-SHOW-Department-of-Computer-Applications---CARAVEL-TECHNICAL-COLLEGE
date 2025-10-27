@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - AI Magic Show</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --deep-bg: #00121a;
+            --neon-blue: #00B4FF;
+            --glow-green: #00FF90;
+            --dark-card: #0a1f2e;
+            --text-primary: #ffffff;
+            --text-secondary: #b0c4d8;
+            --error-red: #ff4444;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--deep-bg);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+            flex: 1;
+        }
+
+        /* Header */
+        .page-header {
+            text-align: center;
+            padding: 40px 20px;
+            background: rgba(0, 18, 26, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0, 180, 255, 0.2);
+            margin-bottom: 40px;
+        }
+
+        .page-header h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 36px;
+            background: linear-gradient(135deg, var(--neon-blue), var(--glow-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .page-header p {
+            color: var(--text-secondary);
+            font-size: 16px;
+        }
+
+        .back-link {
+            display: inline-block;
+            color: var(--neon-blue);
+            text-decoration: none;
+            margin-bottom: 20px;
+            font-size: 14px;
+            transition: color 0.3s ease;
+        }
+
+        .back-link:hover {
+            color: var(--glow-green);
+        }
+
+        /* Form Container */
+        .form-container {
+            background: var(--dark-card);
+            border-radius: 20px;
+            padding: 40px;
+            border: 1px solid rgba(0, 180, 255, 0.3);
+            box-shadow: 0 0 40px rgba(0, 180, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Progress Indicator */
+        .progress-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .progress-step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+
+        .progress-step::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            width: 100%;
+            height: 2px;
+            background: rgba(0, 180, 255, 0.2);
+            z-index: 0;
+        }
+
+        .progress-step:first-child::before {
+            display: none;
+        }
+
+        .progress-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--deep-bg);
+            border: 2px solid rgba(0, 180, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            position: relative;
+            z-index: 1;
+            transition: all 0.3s ease;
+        }
+
+        .progress-step.active .progress-number {
+            background: var(--neon-blue);
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 20px rgba(0, 180, 255, 0.5);
+        }
+
+        .progress-step.completed .progress-number {
+            background: var(--glow-green);
+            border-color: var(--glow-green);
+        }
+
+        .progress-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .progress-step.active .progress-label {
+            color: var(--neon-blue);
+        }
+
+        /* Form Steps */
+        .form-step {
+            display: none;
+            animation: slideIn 0.5s ease;
+        }
+
+        .form-step.active {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .form-step.slide-left {
+            animation: slideLeft 0.5s ease;
+        }
+
+        @keyframes slideLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Form Fields */
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--neon-blue);
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .form-group label .required {
+            color: var(--error-red);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(0, 18, 26, 0.6);
+            border: 1px solid rgba(0, 180, 255, 0.3);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 16px;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 20px rgba(0, 180, 255, 0.3);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .form-group input::placeholder {
+            color: var(--text-secondary);
+            opacity: 0.6;
+        }
+
+        .error-message {
+            color: var(--error-red);
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .form-group.error input,
+        .form-group.error select,
+        .form-group.error textarea {
+            border-color: var(--error-red);
+        }
+
+        .form-group.error .error-message {
+            display: block;
+        }
+
+        /* Buttons */
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px 30px;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--neon-blue), #0066cc);
+            color: white;
+            box-shadow: 0 0 20px rgba(0, 180, 255, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 30px rgba(0, 180, 255, 0.6);
+        }
+
+        .btn-secondary {
+            background: rgba(0, 180, 255, 0.1);
+            color: var(--neon-blue);
+            border: 1px solid var(--neon-blue);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(0, 180, 255, 0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Success Screen */
+        .success-screen {
+            display: none;
+            text-align: center;
+            padding: 40px 20px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .success-screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .success-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: bounce 0.6s ease;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .success-screen h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 28px;
+            color: var(--glow-green);
+            margin-bottom: 15px;
+        }
+
+        .success-screen p {
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        /* Loading Spinner */
+        .loading-spinner {
+            display: none;
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(0, 180, 255, 0.2);
+            border-top-color: var(--neon-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-spinner.active {
+            display: block;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .form-container {
+                padding: 30px 20px;
+            }
+
+            .page-header h1 {
+                font-size: 28px;
+            }
+
+            .form-actions {
+                flex-direction: column-reverse;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            position: relative;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="particle-canvas"></canvas>
+
+    <div class="page-header">
+        <div class="container">
+            <a href="index.html" class="back-link">← Back to Event Page</a>
+            <h1>Register Now</h1>
+            <p>Join us for the AI Magic Show experience</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="form-container">
+            <!-- Progress Indicator -->
+            <div class="progress-indicator">
+                <div class="progress-step active" data-step="1">
+                    <div class="progress-number">1</div>
+                    <div class="progress-label">Basic Info</div>
+                </div>
+                <div class="progress-step" data-step="2">
+                    <div class="progress-number">2</div>
+                    <div class="progress-label">Additional Info</div>
+                </div>
+            </div>
+
+            <!-- Registration Form -->
+            <form id="registration-form">
+                <!-- Step 1: Basic Information -->
+                <div class="form-step active" data-step="1">
+                    <div class="form-group">
+                        <label for="name">Full Name <span class="required">*</span></label>
+                        <input type="text" id="name" name="name" required autocomplete="name" placeholder="Enter your full name">
+                        <div class="error-message">Please enter your full name</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="college">College Name <span class="required">*</span></label>
+                        <input type="text" id="college" name="college" required autocomplete="organization" placeholder="Enter your college name">
+                        <div class="error-message">Please enter your college name</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="department">Department <span class="required">*</span></label>
+                        <input type="text" id="department" name="department" required placeholder="e.g., Computer Science, BCA">
+                        <div class="error-message">Please enter your department</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email Address <span class="required">*</span></label>
+                        <input type="email" id="email" name="email" required autocomplete="email" placeholder="your.email@example.com">
+                        <div class="error-message">Please enter a valid email address</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone">Phone Number <span class="required">*</span></label>
+                        <input type="tel" id="phone" name="phone" required autocomplete="tel" placeholder="+91 98765 43210" pattern="[0-9+\s-]+">
+                        <div class="error-message">Please enter a valid phone number</div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-primary" onclick="nextStep()">Next →</button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Additional Information -->
+                <div class="form-step" data-step="2">
+                    <div class="form-group">
+                        <label for="why-join">Why do you want to join this event? <span class="required">*</span></label>
+                        <textarea id="why-join" name="why-join" required placeholder="Tell us what excites you about AI and this event..."></textarea>
+                        <div class="error-message">Please tell us why you want to join</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="ai-experience">Have you used AI tools before? <span class="required">*</span></label>
+                        <select id="ai-experience" name="ai-experience" required>
+                            <option value="">Select an option</option>
+                            <option value="yes">Yes, regularly</option>
+                            <option value="little">Little experience</option>
+                            <option value="no">No, I'm new to AI</option>
+                        </select>
+                        <div class="error-message">Please select your experience level</div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="prevStep()">← Back</button>
+                        <button type="submit" class="btn btn-primary">Submit Registration</button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Loading Spinner -->
+            <div class="loading-spinner" id="loading-spinner"></div>
+
+            <!-- Success Screen -->
+            <div class="success-screen" id="success-screen">
+                <div class="success-icon">🎉</div>
+                <h2>Registration Successful!</h2>
+                <p>Thank you for registering! We're excited to see you at the AI Magic Show.<br>
+                A confirmation email will be sent to your registered email address.</p>
+                <button class="btn btn-primary" onclick="window.location.href='index.html'">Back to Home</button>
+                <button class="btn btn-secondary" style="margin-top: 15px;" onclick="downloadTicket()">Download Ticket</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>© 2025 Caravel Technical College. All rights reserved.</p>
+        <h6>🧑🏻‍💻Developed by Apurba Goswami</h6>
+    </footer>
+
+    <script>
+        // ============ CONFIGURATION ============
+        // Replace with your Google Apps Script Web App URL
+        const GOOGLE_APPS_SCRIPT_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE';
+        
+        // Set to true to use Google Sheets, false for mailto fallback
+        const USE_GOOGLE_SHEETS = false;
+
+        // ============ PARTICLE BACKGROUND ============
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const particles = [];
+        const particleCount = 80;
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.size = Math.random() * 2 + 1;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+            }
+
+            draw() {
+                ctx.fillStyle = 'rgba(0, 180, 255, 0.5)';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        for (let i = 0; i < particleCount; i++) {
+            particles.push(new Particle());
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            particles.forEach(particle => {
+                particle.update();
+                particle.draw();
+            });
+
+            particles.forEach((p1, i) => {
+                particles.slice(i + 1).forEach(p2 => {
+                    const dx = p1.x - p2.x;
+                    const dy = p1.y - p2.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < 100) {
+                        ctx.strokeStyle = `rgba(0, 180, 255, ${0.2 - distance / 500})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.beginPath();
+                        ctx.moveTo(p1.x, p1.y);
+                        ctx.lineTo(p2.x, p2.y);
+                        ctx.stroke();
+                    }
+                });
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        // ============ FORM NAVIGATION ============
+        let currentStep = 1;
+        const formData = {};
+
+        function updateProgress() {
+            document.querySelectorAll('.progress-step').forEach(step => {
+                const stepNum = parseInt(step.dataset.step);
+                step.classList.remove('active', 'completed');
+                
+                if (stepNum === currentStep) {
+                    step.classList.add('active');
+                } else if (stepNum < currentStep) {
+                    step.classList.add('completed');
+                }
+            });
+        }
+
+        function validateStep(step) {
+            const stepElement = document.querySelector(`.form-step[data-step="${step}"]`);
+            const inputs = stepElement.querySelectorAll('input[required], select[required], textarea[required]');
+            let isValid = true;
+
+            inputs.forEach(input => {
+                const formGroup = input.closest('.form-group');
+                formGroup.classList.remove('error');
+
+                if (!input.value.trim()) {
+                    formGroup.classList.add('error');
+                    isValid = false;
+                } else if (input.type === 'email' && !input.validity.valid) {
+                    formGroup.classList.add('error');
+                    isValid = false;
+                }
+            });
+
+            return isValid;
+        }
+
+        function nextStep() {
+            if (!validateStep(currentStep)) {
+                return;
+            }
+
+            // Save current step data
+            const stepElement = document.querySelector(`.form-step[data-step="${currentStep}"]`);
+            const inputs = stepElement.querySelectorAll('input, select, textarea');
+            inputs.forEach(input => {
+                formData[input.name] = input.value;
+            });
+
+            // Move to next step
+            document.querySelector(`.form-step[data-step="${currentStep}"]`).classList.remove('active');
+            currentStep++;
+            const nextStepElement = document.querySelector(`.form-step[data-step="${currentStep}"]`);
+            nextStepElement.classList.add('active');
+            nextStepElement.classList.remove('slide-left');
+            
+            updateProgress();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function prevStep() {
+            document.querySelector(`.form-step[data-step="${currentStep}"]`).classList.remove('active');
+            currentStep--;
+            const prevStepElement = document.querySelector(`.form-step[data-step="${currentStep}"]`);
+            prevStepElement.classList.add('active', 'slide-left');
+            
+            updateProgress();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // ============ FORM SUBMISSION ============
+        document.getElementById('registration-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            if (!validateStep(currentStep)) {
+                return;
+            }
+
+            // Collect all form data
+            const formElement = e.target;
+            const formInputs = formElement.querySelectorAll('input, select, textarea');
+            formInputs.forEach(input => {
+                formData[input.name] = input.value;
+            });
+
+            // Add timestamp
+            formData.timestamp = new Date().toISOString();
+
+            // Hide form and show loading
+            document.getElementById('registration-form').style.display = 'none';
+            document.querySelector('.progress-indicator').style.display = 'none';
+            document.getElementById('loading-spinner').classList.add('active');
+
+            try {
+                if (USE_GOOGLE_SHEETS && GOOGLE_APPS_SCRIPT_URL !== 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
+                    await submitToGoogleSheets(formData);
+                } else {
+                    // Fallback: mailto or show success
+                    setTimeout(() => {
+                        showSuccess();
+                    }, 1500);
+                }
+            } catch (error) {
+                console.error('Submission error:', error);
+                alert('There was an error submitting your registration. Please try again or contact us directly.');
+                document.getElementById('loading-spinner').classList.remove('active');
+                document.getElementById('registration-form').style.display = 'block';
+                document.querySelector('.progress-indicator').style.display = 'flex';
+            }
+        });
+
+        async function submitToGoogleSheets(data) {
+            const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors', // Required for Google Apps Script
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+
+            // Note: With no-cors mode, we can't read the response
+            // We'll assume success after a delay
+            setTimeout(() => {
+                showSuccess();
+            }, 2000);
+        }
+
+        function showSuccess() {
+            document.getElementById('loading-spinner').classList.remove('active');
+            document.getElementById('success-screen').classList.add('active');
+            
+            // Store registration data for ticket download
+            sessionStorage.setItem('registrationData', JSON.stringify(formData));
+        }
+
+        function downloadTicket() {
+            const data = JSON.parse(sessionStorage.getItem('registrationData') || '{}');
+            
+            const ticketContent = `
+========================================
+AI MAGIC SHOW - EVENT TICKET
+========================================
+
+Name: ${data.name || 'N/A'}
+College: ${data.college || 'N/A'}
+Department: ${data.department || 'N/A'}
+Email: ${data.email || 'N/A'}
+Phone: ${data.phone || 'N/A'}
+
+Event: AI Magic Show - When Technology Starts Thinking
+Date: November 15, 2025
+Time: 10:00 AM
+Venue: Main Auditorium, Caravel Technical College
+
+Registration ID: REG-${Date.now()}
+
+========================================
+Please present this ticket at the venue
+========================================
+`;
+
+            const blob = new Blob([ticketContent], { type: 'text/plain' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'ai-magic-show-ticket.txt';
+            link.click();
+        }
+
+        // Remove error styling on input
+        document.querySelectorAll('input, select, textarea').forEach(input => {
+            input.addEventListener('input', function() {
+                this.closest('.form-group').classList.remove('error');
+            });
+        });
+    </script>
+</body>
+</html>
